@@ -29,7 +29,7 @@ class Exports::AudienceExportService
 
       query = query.where(conditions.join(" OR "))
 
-      query.order(:min_created_at).find_each do |member|
+      query.order(:min_created_at).find_each(batch_size: 2000) do |member|
         csv << [member.email, member.min_created_at]
       end
     end
