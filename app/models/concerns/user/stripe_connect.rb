@@ -4,13 +4,15 @@ module User::StripeConnect
   extend ActiveSupport::Concern
 
   class_methods do
-    def find_or_create_for_stripe_connect_account(data)
+    def find_or_create_for_stripe_connect_account(data, stripe_disable_signup: false)
       return nil if data.blank?
 
       user = MerchantAccount.where(charge_processor_merchant_id: data["uid"]).alive
                  .find { |ma| ma.is_a_stripe_connect_account? }&.user
 
       if user.nil?
+        return :stripe_signup_disabled if stripe_disable_signup
+
         ActiveRecord::Base.transaction do
           user = User.new
           user.provider = :stripe_connect
