@@ -150,6 +150,27 @@ describe User::OmniauthCallbacksController do
         expect(purchase2.reload.purchaser_id).to eq(user.id)
         expect(response).to redirect_to safe_redirect_path(two_factor_authentication_path(next: oauth_completions_stripe_path))
       end
+
+      it "creates user when stripe signup feature flag is not disabled" do
+        allow(Feature).to receive(:active?).and_call_original
+        allow(Feature).to receive(:active?).with(:stripe_disable_signup, false).and_return(false)
+        expect { post :stripe_connect }.to change { User.count }.by(1)
+
+        user = User.last
+        expect(user.email).to eq("stripe.connect@gum.co")
+        expect(user.confirmed?).to be true
+        expect(response).to redirect_to safe_redirect_path(two_factor_authentication_path(next: oauth_completions_stripe_path))
+      end
+
+      it "redirects to signup with alert when stripe signup feature flag is disabled" do
+        allow(Feature).to receive(:active?).and_call_original
+        allow(Feature).to receive(:active?).with(:stripe_disable_signup, false).and_return(true)
+
+        post :stripe_connect
+
+        expect(flash[:alert]).to eq "Stripe sign up is currently disabled. Please sign up with email instead."
+        expect(response).to redirect_to signup_url
+      end
     end
   end
 

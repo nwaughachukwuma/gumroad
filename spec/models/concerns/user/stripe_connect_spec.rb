@@ -55,6 +55,14 @@ describe User::StripeConnect do
       expect(User.last.confirmed?).to be true
     end
 
+    it "does not create a new user account if stripe signup feature flag is disabled" do
+      expect do
+        expect do
+          expect(User.find_or_create_for_stripe_connect_account(@data, stripe_disable_signup: true)).to eq(:stripe_signup_disabled)
+        end.to change { User.count }.by(0)
+      end.to change { UserComplianceInfo.count }.by(0)
+    end
+
     it "associates past purchases with the same email to the new user" do
       email = @data["info"]["email"]
       purchase1 = create(:purchase, email:)
