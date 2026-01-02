@@ -31,6 +31,9 @@ describe User::OmniauthCallbacksController do
 
     before do
       request.env["omniauth.auth"] = stripe_auth
+
+      allow(Feature).to receive(:active?).and_call_original
+      allow(Feature).to receive(:active?).with(:stripe_disable_signup, false).and_return(false)
     end
 
     shared_examples "stripe connect user creation" do
@@ -137,8 +140,8 @@ describe User::OmniauthCallbacksController do
 
       it "associates past purchases with the same email to the new user" do
         email = request.env["omniauth.auth"]["info"]["email"]
-        purchase1 = create(:purchase, email:)
-        purchase2 = create(:purchase, email:)
+        purchase1 = create(:free_purchase, email:)
+        purchase2 = create(:free_purchase, email:)
         expect(purchase1.purchaser_id).to be_nil
         expect(purchase2.purchaser_id).to be_nil
 
@@ -152,8 +155,6 @@ describe User::OmniauthCallbacksController do
       end
 
       it "creates user when stripe signup feature flag is not disabled" do
-        allow(Feature).to receive(:active?).and_call_original
-        allow(Feature).to receive(:active?).with(:stripe_disable_signup, false).and_return(false)
         expect { post :stripe_connect }.to change { User.count }.by(1)
 
         user = User.last
@@ -163,7 +164,6 @@ describe User::OmniauthCallbacksController do
       end
 
       it "redirects to signup with alert when stripe signup feature flag is disabled" do
-        allow(Feature).to receive(:active?).and_call_original
         allow(Feature).to receive(:active?).with(:stripe_disable_signup, false).and_return(true)
 
         post :stripe_connect
@@ -191,10 +191,10 @@ describe User::OmniauthCallbacksController do
       expect(user.global_affiliate).to be_present
     end
 
-    it "associates past purchases with the same email to the new user" do
+    it "associates past purchases with the same email to the new user", :vcr do
       email = request.env["omniauth.auth"]["info"]["email"]
-      purchase1 = create(:purchase, email:)
-      purchase2 = create(:purchase, email:)
+      purchase1 = create(:free_purchase, email:)
+      purchase2 = create(:free_purchase, email:)
       expect(purchase1.purchaser_id).to be_nil
       expect(purchase2.purchaser_id).to be_nil
 
