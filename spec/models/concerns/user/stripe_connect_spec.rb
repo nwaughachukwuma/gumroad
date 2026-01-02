@@ -65,8 +65,8 @@ describe User::StripeConnect do
 
     it "associates past purchases with the same email to the new user" do
       email = @data["info"]["email"]
-      purchase1 = create(:purchase, email:)
-      purchase2 = create(:purchase, email:)
+      purchase1 = create(:free_purchase, email:)
+      purchase2 = create(:free_purchase, email:)
       expect(purchase1.purchaser_id).to be_nil
       expect(purchase2.purchaser_id).to be_nil
 
