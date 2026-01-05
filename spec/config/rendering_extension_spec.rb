@@ -37,7 +37,7 @@ describe "RenderingExtension" do
             locale: "en-US",
             feature_flags: {
               require_email_typo_acknowledgment: false,
-              stripe_disable_signup: false
+              disable_stripe_signup: false
             }
           }
         )
@@ -144,7 +144,7 @@ describe "RenderingExtension" do
               locale: "en-US",
               feature_flags: {
                 require_email_typo_acknowledgment: false,
-                stripe_disable_signup: false
+                disable_stripe_signup: false
               }
             }
           )
